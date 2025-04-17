@@ -1,0 +1,24 @@
+name: Enforce Conversation Resolution
+
+on:
+  pull_request:
+    types: [ready_for_review]
+
+jobs:
+  check-conversations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for unresolved conversations
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: reviews } = await github.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+
+            const unresolved = reviews.some(review => review.state === "COMMENTED");
+            if (unresolved) {
+              throw new Error("All conversations must be resolved before merging.");
+            }
