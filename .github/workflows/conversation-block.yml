@@ -1,52 +1,52 @@
-name: Enforce Conversation Resolution
+# name: Enforce Conversation Resolution
 
-on:
-  pull_request:
-    types: [ready_for_review, synchronize]
+# on:
+#   pull_request:
+#     types: [ready_for_review, synchronize]
 
-jobs:
-  check-conversations:
-    runs-on: ubuntu-latest
-    steps:
-      # Step 1: Debugging context to identify issues
-      - name: Debug Pull Request Details
-        uses: actions/github-script@v6
-        with:
-          script: |
-            console.log("Repository Owner:", context.repo.owner);
-            console.log("Repository Name:", context.repo.repo);
-            console.log("Pull Request Number:", context.payload.pull_request?.number);
-            if (!context.payload.pull_request) {
-              throw new Error("Pull request details are missing. Ensure the workflow trigger is correct.");
-            }
+# jobs:
+#   check-conversations:
+#     runs-on: ubuntu-latest
+#     steps:
+#       # Step 1: Debugging context to identify issues
+#       - name: Debug Pull Request Details
+#         uses: actions/github-script@v6
+#         with:
+#           script: |
+#             console.log("Repository Owner:", context.repo.owner);
+#             console.log("Repository Name:", context.repo.repo);
+#             console.log("Pull Request Number:", context.payload.pull_request?.number);
+#             if (!context.payload.pull_request) {
+#               throw new Error("Pull request details are missing. Ensure the workflow trigger is correct.");
+#             }
 
-      # Step 2: Check for unresolved conversations and review status
-      - name: Check for unresolved conversations
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const pull_number = context.payload.pull_request.number;
+#       # Step 2: Check for unresolved conversations and review status
+#       - name: Check for unresolved conversations
+#         uses: actions/github-script@v6
+#         with:
+#           script: |
+#             const { owner, repo } = context.repo;
+#             const pull_number = context.payload.pull_request.number;
 
-            // Fetch pull request reviews
-            const { data: reviews } = await github.pulls.listReviews({
-              owner: owner,
-              repo: repo,
-              pull_number: pull_number,
-            });
+#             // Fetch pull request reviews
+#             const { data: reviews } = await github.pulls.listReviews({
+#               owner: owner,
+#               repo: repo,
+#               pull_number: pull_number,
+#             });
 
-            console.log("Reviews:", reviews);
+#             console.log("Reviews:", reviews);
 
-            // Check for unresolved conversations
-            const unresolved = reviews.some(review => review.state === "COMMENTED");
-            const changesRequested = reviews.some(review => review.state === "CHANGES_REQUESTED");
+#             // Check for unresolved conversations
+#             const unresolved = reviews.some(review => review.state === "COMMENTED");
+#             const changesRequested = reviews.some(review => review.state === "CHANGES_REQUESTED");
 
-            if (unresolved) {
-              throw new Error("Unresolved conversations detected. Please resolve all comments before merging.");
-            }
+#             if (unresolved) {
+#               throw new Error("Unresolved conversations detected. Please resolve all comments before merging.");
+#             }
 
-            if (changesRequested) {
-              throw new Error("Changes requested by reviewers. Please address changes and ask reviewers to approve.");
-            }
+#             if (changesRequested) {
+#               throw new Error("Changes requested by reviewers. Please address changes and ask reviewers to approve.");
+#             }
 
-            console.log("All checks passed. Ready to merge.");
+#             console.log("All checks passed. Ready to merge.");
