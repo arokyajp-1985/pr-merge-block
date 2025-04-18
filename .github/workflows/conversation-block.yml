@@ -1,14 +1,14 @@
-name: Enforce Conversation Resolution
+name: Enforce Conversation and Review Approval
 
 on:
   pull_request:
-    types: [ready_for_review]
+    types: [opened, synchronize, ready_for_review]
 
 jobs:
-  check-conversations:
+  enforce-review-approval:
     runs-on: ubuntu-latest
     steps:
-      - name: Check for unresolved conversations
+      - name: Check conversation resolution and review status
         uses: actions/github-script@v6
         with:
           script: |
@@ -18,7 +18,9 @@ jobs:
               pull_number: context.payload.pull_request.number,
             });
 
-            const unresolved = reviews.some(review => review.state === "COMMENTED");
-            if (unresolved) {
-              throw new Error("All conversations must be resolved before merging.");
+            const conversationsResolved = context.payload.pull_request.conversation_resolved;
+            const changesRequested = reviews.some(review => review.state === "CHANGES_REQUESTED");
+
+            if (conversationsResolved && changesRequested) {
+              core.setFailed("Conversations have been resolved, but the reviewer has requested changes. Please ask the reviewer to approve.");
             }
